@@ -1,10 +1,10 @@
 #!/usr/bin/perl	
 
-$soft = "IRiS nX"; $ver = "1.3";
+$soft = "IRiS nX"; $ver = "1.33 sp2";
 #
 #  IRiS nX
 #  -------
-#  Copyright(C)2000-2001. NvyU. (20010211 release)
+#  Copyright(C)2000-2001. NvyU. (20010726 release)
 #	   E-MAIL	: nvyu@hitel.net
 #	   HOMEPAGE : http://nvyu.net/
 #
@@ -12,29 +12,31 @@ $soft = "IRiS nX"; $ver = "1.3";
 #  - 이 스크립트는 공개로 제공됩니다. 이 스크립트를 사용할 경우에 생길 수 있는
 #	 손해 등에 대해서 제작자는 일체 책임을 지지 않습니다.
 #  - 원하시는 추가 기능이 있으실 경우에는 리퀘스트 해주시면 감사하겠습니다.
-#  - 저작권 정보는 수정하지 말아주세요.
+#  - 스크립트의 수정은 자제해주세요.
 #
 #
 
+	$init = 0;
 	require 'nxcfg.cgi';
 	
 	umask(000);
 
 	$env = $ENV{'SCRIPT_NAME'}; @env = split(/\//, $env);
 	$StartClock = (times)[0];
-
 	$data_dir .= "/" if ($data_dir !~ /\/$/);
 	$data_url .= "/" if ($data_url !~ /\/$/);
 	$backup_dir .= "/" if ($backup_dir !~ /\/$/);
 	$nx_log = $data_dir . $nx_log;  
 	$backup_log = $backup_dir . $backup_log;
+	$adenyip_log = $data_dir . "adenyip.cgi";
+	$wdenyip_log = $data_dir . "wdenyip.cgi";
 
 	$gradcolor =~ s/#//g; $gradcolor2 =~ s/#//g;
 
 	$tmpfile = $data_dir . "haruka";
 
 	$angels = 10;
-	@sister_princess = ('num', 'sn', 'name', 'email', 'url', 'time', 'comment', 'filename', 'title', 'style', '');
+	@sister_princess = ('num', 'sn', 'name', 'email', 'url', 'time', 'comment', 'filename', 'title', 'style', 'ip', '');
 
 	&get_form; &get_cookie; 
 
@@ -46,18 +48,23 @@ $soft = "IRiS nX"; $ver = "1.3";
 	&msg_error("submit", "illegal referer") if ($F{'m'} =~ /(reg|res|ers|emt|aru|k|miho|mariko)/ && $scr ne '' && $ref !~ /$scr/);
 
 	unlink($tmpfile) if ($F{'m'} eq 'dwn' && $admin == 1);
-	if ($F{'m'} eq 'k' && $admin == 1 && $F{'f'} ne 'irisnx.log' && $F{'f'} ne 'index.htm') { unlink("$data_dir$F{'f'}"); $F{'m'} = 'aru'; }
+	if ($F{'m'} eq 'k' && $admin == 1 && $F{'f'} ne 'irisnx.log' && $F{'f'} ne 'index.htm' && $file ne 'adenyip.cgi' && $file ne 'wdenyip.cgi') { unlink("$data_dir$F{'f'}"); $F{'m'} = 'aru'; }
 
 	&cvt_html; 
 
+	&check_deny($adenyip_log);
+
+	&honoka_sawatari;
 
 	if ($F{'m'} eq 'reg') {	
+		&check_deny($wdenyip_log);
 		if ($art_register != 1 or ($art_register == 1 && $admin == 1)) {
 			if ($F{'anum'} eq '') {
 				&lock;
 				@TOTLOG = &get_file($nx_log); $F{'num'} = $TOTLOG[0] + 0; shift(@TOTLOG);
 				foreach (0 .. 5) { @TMP = split(/\|/, $TOTLOG[$_]); &msg_error("submit","resubmitted?") if ($TMP[2] eq $F{'name'} && $TMP[6] eq $F{'comment'}); }
 				$F{'num'} += 1; 
+				$F{'ip'} = $ENV{'REMOTE_ADDR'};
 				$F{'title'} = $default_title if ($F{'title'} eq '');
 				$F{'time'} = get_vtime(time); $F{'sn'} = "";
 				if ($F{'file.name'} =~ /^(http|ftp|telnet):\/\// && (($outsidelink == 1 && $admin == 1) or $outsidelink == 2)) { $F{'filename'} = $F{'file.name'}; }
@@ -90,6 +97,7 @@ $soft = "IRiS nX"; $ver = "1.3";
 		} else { $F{'m'} = ''; }
 	} 
 	elsif ($F{'m'} eq 'res') {
+		&check_deny($wdenyip_log);
 		if ($res_register != 1 or ($res_register == 1 && $admin == 1)) {
 			undef(@ADDLOG); undef(@NEWLOG); 
 			if ($F{'file.name'} =~ /^(http|ftp|telnet):\/\// && (($outsidelink == 1 && $admin == 1) or $outsidelink == 2)) { $F{'filename'} = $F{'file.name'}; }
@@ -102,6 +110,7 @@ $soft = "IRiS nX"; $ver = "1.3";
 				if ($TMP[0] == $F{'n'}) {
 					if ($already != 1) {
 						$F{'num'} = $F{'n'};
+						$F{'ip'} = $ENV{'REMOTE_ADDR'};
 						$F{'sn'} = $TMP[1] + 1;
 						$F{'title'} = $default_title if ($F{'title'} eq '');
 						$F{'time'} = &get_vtime(time);
@@ -256,7 +265,7 @@ $soft = "IRiS nX"; $ver = "1.3";
 			foreach $LOG (@TOTLOG) {
 				@TMP = split(/\|/, $LOG);
 				if (length $miko{"$TMP[0]_$TMP[1]"} == 13) {
-					($E{'no'}, $E{'sno'}, $E{'name'}, $E{'email'}, $E{'url'}, $E{'time'}, $E{'comment'}, $E{'filename'}, $E{'title'}, $E{'style'}) =  split(/\|/, $LOG);
+					($E{'no'}, $E{'sno'}, $E{'name'}, $E{'email'}, $E{'url'}, $E{'time'}, $E{'comment'}, $E{'filename'}, $E{'title'}, $E{'style'}, $E{'ip'}) =  split(/\|/, $LOG);
 					$E{'comment'} =~ s/<br>|<BR>/\n/g;
 					$E{'comment'} =~ s/</&lt;/g;
 					$E{'comment'} =~ s/>/&gt;/g;
@@ -268,16 +277,16 @@ $soft = "IRiS nX"; $ver = "1.3";
 						if ($_ == $A{'week_p'}) { $VKT = ' selected'; } else { $VKT = ''; }
 						$VP .= qq|<OPTION VALUE="$_"$VKT>$week[$_]|;
 					}
-					&honoka_sawatari;
 					$dmi .= qq|<font size=2>게시물 편집 모드입니다.<br>파일 수정 전송은 파일 관리 메뉴를 사용해주세요.<br>|;
 					print qq|<html><head></head><body><div align=center>$dmi|;
 					print qq|<form method=post action="irisnx.cgi"><input type=hidden name="m" value="reg"><table border=1 cellspacing=0 cellpadding=1>\n|;
 					print qq|<input type=hidden name="anum" value="$E{'no'}_$E{'sno'}"><input type=hidden name="filename" value="$E{'filename'}">\n|;
+					print qq|<input type=hidden name="ip" value="$E{'ip'}">\n|;
 					print qq|<tr><td rowspan=3 align=center><b>$NN</b></td><td><font size=2>NAME</font></td><td colspan=2><input type=text name="name" value="$E{'name'}" size=20><td><font size=2>EMAIL</font></td><td><input type=text name="email" value="$E{'email'}" size=12></td><td><font size=2>URL</font></td><td><input type=text name="url" value="$E{'url'}" size=12></td></tr>\n|;
 					print qq|<tr><td><font size=2>DATE</font></td><td><input type=text name="date" value="$VD" size=12></td><td><select name="week">$VP</select></td><td><font size=2>TIME</font></td><td><input type=text name="time" value="$VT" size=12></td><td><font size=2>ATTACH</font></td><td><input type=text name="filename" value="$E{'filename'}" size=12></td></tr>\n|;
 					print qq|<tr><td><font size=2>TITLE</font></td><td colspan=6><input type=text name="title" value="$E{'title'}" size=75></td></tr>\n|;
 					print qq|<tr><td align=center colspan=8><textarea name="comment" rows=15 cols=75>$E{'comment'}</textarea></td></tr>\n|;
-					print qq|<tr><td colspan=2><font size=2>ATTACH STYLE</font></td><td><select name="style">$V{'style_list'}</select></td><td align=right colspan=5><input type=submit value=" carrot "> <input type=reset value="reset"></td></tr></table><p><a href="javascript:history.back();">[back]</a></font>|;
+					print qq|<tr><td colspan=2><font size=2>ATTACH STYLE</font></td><td><select name="style">$V{'style_list'}</select></td><td>IP</td><td><FONT SIZE=2>$E{'ip'}</FONT></td><td align=right colspan=3><input type=submit value=" carrot "> <input type=reset value="reset"></td></tr></table><p><a href="javascript:history.back();">[back]</a></font>|;
 					print qq|</form></div>|;
 					&show_dreams;
 					print qq|</body></html>|;
@@ -286,7 +295,6 @@ $soft = "IRiS nX"; $ver = "1.3";
 			exit;
 		}
 	}
-	&honoka_sawatari;
 	foreach $temp (@main) {
 		$adm = not $adm if ($temp =~ /<!--admin_only-->/ && $admin == 0);
 		$temp =~ s/<!--admin_only-->//g;
@@ -320,6 +328,7 @@ $soft = "IRiS nX"; $ver = "1.3";
 									if ($tempview !~ /<!--reply-->/) {
 										$tempview =~ s/(NAME="n")/$1 value="$L{'num'}"/i;
 										$tempview =~ s/(NAME="p")/$1 value="$F{'p'}"/i;
+										$tempview =~ s/data<!--d-->/$L{'data'}/ig;
 										foreach (keys %cookie) { $tempview =~ s/$_<!--d-->/$cookie{$_}/ig; }
 										foreach (keys %L ) { $tempview =~ s/$_<!--d-->/$L{$_}/ig; }
 										print $tempview; 
@@ -328,6 +337,7 @@ $soft = "IRiS nX"; $ver = "1.3";
 										foreach $RESLOG (@RESLOG) {
 											my($konnichiwa) = $repl; my(%D);
 											%D = &cvt_data($RESLOG);
+											$konnichiwa =~ s/data<!--d-->/$D{'data'}/ig;
 											foreach $_ ( keys %D ) { $konnichiwa =~ s/$_<!--d-->/$D{$_}/ig; }
 											print $konnichiwa;
 										}
@@ -393,7 +403,7 @@ sub show_dreams {
 sub move_yourbody {
 	undef(%FLIST);
 	opendir(DIR, $data_dir) || &msg_error("Directory Browse", "Can't open $data_dir");
-	while (defined($file = readdir(DIR))) { $FLIST{$file}++ if ($file ne '.' && $file ne '..' && $file ne 'irisnx.log' && $file ne 'index.htm'); }
+	while (defined($file = readdir(DIR))) { $FLIST{$file}++ if ($file ne '.' && $file ne '..' && $file ne 'irisnx.log' && $file ne 'index.htm' && $file ne 'adenyip.cgi' && $file ne 'wdenyip.cgi'); }
 	closedir(DIR);
 	foreach  (@TOTLOG) {
 		@TMP = split(/\|/, $_);
@@ -461,7 +471,7 @@ sub rmv_list {
 
 sub cvt_data {
 	my($LOG) = $_[0]; my(%L); my(%A); my(%C);
-	($L{'num'}, $L{'sn'}, $L{'name'}, $L{'email'}, $L{'url'}, $L{'time'}, $L{'comment'}, $L{'filename'}, $L{'title'}, $L{'style'}) = split(/\|/, $LOG);
+	($L{'num'}, $L{'sn'}, $L{'name'}, $L{'email'}, $L{'url'}, $L{'time'}, $L{'comment'}, $L{'filename'}, $L{'title'}, $L{'style'}, $L{'ip'}) = split(/\|/, $LOG);
 	$L{'name'} = qq|<a href="mailto:$L{'email'}">$L{'name'}</a>| if ($L{'email'} ne '');
 	$tmp = $L{'url'}; $L{'url'} = $url; $L{'url'} =~ s/<-!->/$tmp/g;
 	$L{'reply'} = $reply_link; $L{'reply'} =~ s/<-!->/irisnx.cgi?m=rfm&p=$F{'p'}&n=$L{'num'}"/g;
@@ -529,21 +539,21 @@ sub cvt_html {
 		if ($_ ne 'file' && $_ !~ /\./) {
 			$F{$_} =~ s/^\s+//;		
 			if ($html_use == 0 || ($html_use == 1 && $admin == 0)) { 
-				$F{$_} =~ s/</&lt;/g; $F{$_} =~ s/>/&gt;/g; $F{$_} =~ s/"/&quot;/g; 
 				$F{$_} =~ s/&/&amp;/g;
+				$F{$_} =~ s/</&lt;/g; $F{$_} =~ s/>/&gt;/g; $F{$_} =~ s/"/&quot;/g; 
 				$F{$_} =~ s/&amp;\#([0-9]+);/&\#$1;/g;
 			}
 			$F{$_} =~ s/\|/&#124/g;
 			$F{$_} =~ s/(\r\n|\r|\n)/<BR>/g;
 		}
 	}
+	$F{'email'} = '' if ($F{'email'} !~ /.+\@.+\..+/);
+	$F{'url'} = '' if ($F{'url'} !~ /http:\/\/.{3,}/);
 	foreach (keys %must) {
 		&msg_error("cvt_html", "$_ not found.") if ($must{$_} & 1 and $F{'m'} eq 'reg' and $F{$_} eq '');
 		&msg_error("cvt_html", "$_ not found.") if ($must{$_} & 2 and $F{'m'} eq 'res' and $F{$_} eq '');
 	}
-	$F{'email'} = '' if ($F{'email'} !~ /.+\@.+\..+/);
-	$F{'url'} = '' if ($F{'url'} !~ /http:\/\/.{3,}/);
-	$F{'comment'} =~ s/(http:\/\/[\w\.\/\~\-\+\=\#\%\&\?\(\);]+)/<A HREF="$1" TARGET="_blank">$1<\/A>/ig if ($autolink == 1 && ($html_use == 0 or ($html_use == 1 && $admin == 0)));
+	$F{'comment'} =~ s/(http:\/\/[\:\w\.\/\~\-\+\=\#\%\&\?\(\);]+)/<A HREF="$1" TARGET="_blank">$1<\/A>/ig if ($autolink == 1 && ($html_use == 0 or ($html_use == 1 && $admin == 0)));
 }
 
 sub PMultiPart {
@@ -630,13 +640,7 @@ sub get_time {
 		$L{'yy'} = substr($L{'yyyy'}, 2, 2);
 	}
 	else {
-		$L{'yyyy'} = substr($_[0], 0, 4);
-		$L{'mm'} = substr($_[0], 4, 2);	
-		$L{'dd'} = substr($_[0], 6, 2);
-		$L{'ho'} = substr($_[0], 8, 2);
-		$L{'mi'} = substr($_[0], 10, 2);
-		$L{'se'} = substr($_[0], 12, 2);
-		$L{'week_p'} = substr($_[0], 14, 1);
+		($L{'yyyy'}, $L{'mm'}, $L{'dd'}, $L{'ho'}, $L{'mi'}, $L{'se'}, $L{'week_p'}) = $_[0] =~ /(....)(..)(..)(..)(..)(..)(.)/;
 		$L{'week'} = (Sun,Mon,Tue,Wed,Thu,Fri,Sat) [substr($_[0], 14, 1)];
 	}
 	%L;
@@ -678,11 +682,11 @@ sub get_cookie {
     }
 	$cookie{'curl'} = 'http://' if ($cookie{'curl'} eq '');
 	$cook = 'checked' if ($cookie{'cname'} eq '');
-
 }
 
 sub header {
 	# 수정하지 말아주세요. 최소한의 예의는 지켜주셔야지요.
+	$init = 1;
 	print qq|Content-Type: text/html\nPragma: no-cache\n\n<!--\n|;
 	print qq|    IRiS nX $ver\n|;
 	print qq|    Copyright(c)2000-2001. NvyU. All rights reserved.\n|;
@@ -706,7 +710,7 @@ sub sav_file {
 	my($filename);
 	$filename = &get_filename($data_dir, $F{'file.name'});
 	($dummy, $ext) = split(/\./, $F{'file.name'});
-	&msg_error("sav_file", "allowed files only!!") if ($must_allowed == 1 && !defined $eika{lc($ext)});
+	&msg_error("sav_file", "allowed files only!!") if ($must_allowed == 1 && !defined($eika{lc($ext)}));
 	&msg_error("sav_file", "file is too big!<br>limited bytes : $img_limit kb") if ($img_limit != 0 && length $F{'file'} > $img_limit * 1024);
 	open(FILE, ">$data_dir$filename") || &msg_error("sav_file", "file creating error!<br>please check the permission of directories!");
 	binmode FILE; print FILE $F{'file'};
@@ -796,7 +800,7 @@ sub msg_error {
 	print "Content-type: text/html\nPragma: no-cache\n\n";
 	if ($flag eq '') {
 		print "<HTML><HEAD><TITLE>500 CGI internal Error</TITLE></HEAD>";
-		print qq|<table width=100% height=95%><tr><td align=center><table border=1 cellspacing=1 cellpadding=5 bgcolor="#fededd"><tr><td align=center><B>500 CGI Internal Error</b><hr><font size=2>$soft - $ver ($location)<br><b>ERROR : $message</b><br>Please contact to <a href="mailto:$email">admin</a> for report this error.<br></font></td></tr></table><font size=1><br>presented from <a href="http://nvyu.net" target="_blank">-=starry scape=-</a></font></td></tr></table>|;
+		print qq|<table width=100% height=95%><tr><td align=center><table border=1 cellspacing=1 cellpadding=5 bgcolor="#fededd"><tr><td align=center><B>500 CGI Internal Error</b><hr><font size=2>$soft - $ver ($location)<br><b>ERROR : $message</b><br>Please contact to <a href="mailto:$email">admin</a> for report this error.<br></font></td></tr></table><font size=1><br>presented from <a href="http://nvyu.net" target="_blank">-=purity=-</a></font></td></tr></table>|;
 		&unlock;
 		exit;
 	} 
@@ -807,4 +811,18 @@ sub msg_error {
 	}
 }
 
-END { $EndClock = (times)[0]; printf "\n<!--nX RUNNING TIME / %.3f-->", $EndClock - $StartClock; }
+sub check_deny {
+	@DENY_IP = &get_file($_[0]); $match = 0; chomp(@DENY_IP);
+	foreach  (@DENY_IP) {
+		if ($_ !~ /\#/) {		
+			if ($ENV{'REMOTE_ADDR'} =~ /^$_/) { $match=1; last; }
+		}
+	}
+	&msg_error("blocked IP", "Access denided.<br>please contact to administrator.<br>YOUR ACCEESSED IP : $ENV{'REMOTE_ADDR'}") if ($match);
+
+}
+
+END { 
+	if (!$init) { &msg_error("start", "IRiSnX is not configurated rightly.<br>올바르게 설치되어 있지 않습니다. nxcfg.cgi 파일에서 잘못 수정한 사항은 없는지,<BR>모든 CGI 파일들을 ASCII 모드로 올리고 퍼미션을 올바르게 맞추었는지 등을 확인해주세요."); }
+	else { $EndClock = (times)[0]; printf "\n<!--nX RUNNING TIME / %.3f-->", $EndClock - $StartClock; }
+}
