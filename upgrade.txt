@@ -1,8 +1,74 @@
-  IRiS nX 1.33 sp2 upgrade info
-  -----------------------------
-  Copyright(C)2000-2001. NvyU. (20010726 released)
+  IRiS nX 1.4 upgrade info
+  ------------------------
+  Copyright(C)2000-2001. NvyU. (20011204 released)
      EMAIL : nvyu@hitel.net
   HOMEPAGE : http://nvyu.net/
+
+
+> 1.3x에서 1.4로의 업그레이드
+
+  1.33sp1 이전 버전의 사용자 분들은 
+  "1.3x에서 1.33sp1, 1.33sp2로의 업그레이드" 부분을 확인하시고 이 부분으로
+  돌아와주세요.
+
+] 버전 업 하실 파일들
+
+  irisnx.cgi / 그대로 업로드 합니다.
+  nxcfg.cgi  / 
+    수정 후 업로드합니다. 
+    혹은 계정의 nxcfg.cgi 파일에 다음의 부분을 삽입합니다.
+    
+     
+    #검색 제한 로그 수 (레스 포함입니다)
+    $find_limit = 1000;
+
+    1;       
+
+
+    $find_limit = 0 으로 맞춰두셔도 되지만, 퍼포먼스 향상을 위해서는
+    검색 영역을 제한해두시는 것이 좋을 것입니다. (전체 검색시, 1MB 
+    정도의 로그 파일 검색에 약 20초 정도 걸렸던 것으로.;;)
+
+] 검색 기능 관련
+
+  1.4 버전은 검색 기능만 추가로 포함된 것입니다.
+  따라서 검색 기능을 사용하시지 않으실 것이라면, 
+  "업데이트해야할 이유가 없습니다."
+
+
+  다음은 검색 폼 예제입니다.
+
+  <FORM METHOD="get" action="irisnx.cgi"><INPUT TYPE="hidden" NAME="m" VALUE="find">
+    <TABLE CELLSPACING="2" CELLPADDING="2" BORDER="1">
+      <TR>
+        <TD colspan=2>
+          <FONT SIZE="2">
+            <INPUT TYPE="checkbox" NAME="sfname" CHECKED VALUE="true">name
+            <INPUT TYPE="checkbox" NAME="sftitle" CHECKED VALUE="true">title
+            <INPUT TYPE="checkbox" NAME="sfcomment" CHECKED VALUE="true">comment
+            <INPUT TYPE="checkbox" NAME="sfurl" VALUE="true">URL
+            <INPUT TYPE="checkbox" NAME="sfip" VALUE="true">IP
+          </FONT>
+        </TD>
+      </TR>
+      <TR>
+        <TD ALIGN="right"><INPUT TYPE="text" NAME="skey" SIZE="18" value="skey<!--d-->"></TD>
+        <TD ALIGN="right">
+          <FONT SIZE="2"><INPUT TYPE="submit" VALUE="search"></FONT>
+        </TD>
+      </TR>
+  </TABLE></FORM>
+
+  검색 항목에 email을 추가해야 한다면, 'sfemail'을, 파일명을 추가해야 한다면 'sffile'
+  식으로, 'sf'를 데이터 앞에 붙이면 검색 항목이 됩니다.
+  또 검색은 스페이스 기준으로 나뉘어 and 연산이 적용되므로 참고해주세요.
+
+
+] 추가된 템플릿 태그
+
+  skey<!--d--> 가 입력했던 검색어의 표시를 위해 추가되었습니다.
+
+
 
 
 > 1.3x에서 1.33sp1, 1.33sp2로의 업그레이드

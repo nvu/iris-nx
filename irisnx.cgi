@@ -1,10 +1,10 @@
 #!/usr/bin/perl	
 
-$soft = "IRiS nX"; $ver = "1.33 sp2";
+$soft = "IRiS nX"; $ver = "1.4";
 #
 #  IRiS nX
 #  -------
-#  Copyright(C)2000-2001. NvyU. (20010726 release)
+#  Copyright(C)2000-2001. NvyU. (20011206 release)
 #	   E-MAIL	: nvyu@hitel.net
 #	   HOMEPAGE : http://nvyu.net/
 #
@@ -12,12 +12,12 @@ $soft = "IRiS nX"; $ver = "1.33 sp2";
 #  - 이 스크립트는 공개로 제공됩니다. 이 스크립트를 사용할 경우에 생길 수 있는
 #	 손해 등에 대해서 제작자는 일체 책임을 지지 않습니다.
 #  - 원하시는 추가 기능이 있으실 경우에는 리퀘스트 해주시면 감사하겠습니다.
-#  - 스크립트의 수정은 자제해주세요.
 #
 #
 
 	$init = 0;
-	require 'nxcfg.cgi';
+	if (-f 'nxcfg.cgi') { require 'nxcfg.cgi'; }
+	else { &msg_error("start", "Cannot read nxcfg.cgi"); }
 	
 	umask(000);
 
@@ -44,8 +44,8 @@ $soft = "IRiS nX"; $ver = "1.33 sp2";
 
 	$scr = $ENV{'SCRIPT_NAME'};	$scr =~ s/(~|%7E)//g; 
 	$ref = $ENV{'HTTP_REFERER'}; $ref =~ s/(~|%7E)//g;
-	&msg_error("setting", "it's iris nX! please rename installed directory.") if ($env[$#env-1] =~ /(pury|up|asq)/i);
-	&msg_error("submit", "illegal referer") if ($F{'m'} =~ /(reg|res|ers|emt|aru|k|miho|mariko)/ && $scr ne '' && $ref !~ /$scr/);
+
+	&msg_error("submit", "illegal referer") if ($F{'m'} =~ /(reg|res|ers|emt|aru|k|miho|mariko|find)/ && $scr ne '' && $ref !~ /$scr/);
 
 	unlink($tmpfile) if ($F{'m'} eq 'dwn' && $admin == 1);
 	if ($F{'m'} eq 'k' && $admin == 1 && $F{'f'} ne 'irisnx.log' && $F{'f'} ne 'index.htm' && $file ne 'adenyip.cgi' && $file ne 'wdenyip.cgi') { unlink("$data_dir$F{'f'}"); $F{'m'} = 'aru'; }
@@ -223,14 +223,65 @@ $soft = "IRiS nX"; $ver = "1.33 sp2";
 
 	undef($repl); foreach $_ (@repl) { $repl .= $_; }
 
+#					&header;
+#			print $F{'sfname'} . "<br>\n";
+
+
+	if ($F{'m'} eq 'find') {
+		$nxlimit = 0;
+		my(@keyword) = split( /\s/, $F{'skey'} );
+		$active = 1;
+		foreach $LOG (@TOTLOG) {
+			$nxlimit++;
+			($num, $sgn) = split(/\|/, $LOG);
+			if ($fushtable{$num} != 1) {
+				my(%L);
+				%L = &cvt_data($LOG);
+				foreach $frm (keys %L) {
+					$L{$frm} =~ s/<(?:\/|!)?[-a-zA-Z](?:[^>]*)>//g;
+					$L{$frm} =~ s/&lt;/</g;
+					$L{$frm} =~ s/&gt;/>/g;
+					$L{$frm} =~ s/&quot;/"/g;
+					$L{$frm} =~ s/&amp;/&/g;
+					$L{$frm} =~ s/&nbsp;/ /g;
+				}
+
+				$starget = '';
+				foreach $frm (keys %L) {
+					if ($F{'sf' . $frm} ne '') {
+						$A{'sf' . $frm} = $F{'sf' . $frm};
+						$starget .= $L{$frm} . "\n";
+					}
+				}
+				$fushtable{$num} = 1;
+				foreach $keyword (@keyword) {
+					if ($starget !~ /\Q$keyword\E/i) {	
+						$fushtable{$num} = 0;
+						last;
+					}
+				}
+			}
+			last if ($nxlimit > $find_limit && $find_limit != 0);
+		}
+
+	}
+	foreach $frm (keys %A) {
+		$extraline .= "&$frm=$A{$frm}";
+	}
+	$extraline .= "&skey=$F{'skey'}" if ($F{'skey'} ne '');
+	$V{'skey'} = $F{'skey'};
+
 	foreach $LOG (@TOTLOG) {
 		($num, $sgn) = split(/\|/, $LOG);
-		if ($sgn eq '') { push(@LOG, $LOG); }
-		else { $TL{$num}++; push(@RES, $LOG); }
+		if ($active != 1 || ($active == 1 && $fushtable{$num} == 1)) {
+			if ($sgn eq '') { push(@LOG, $LOG); }		
+			else { $TL{$num}++; push(@RES, $LOG); }
+		}
 	}
 
 	@LOG = reverse @LOG if $art_reverse == 1;
 	@RES = reverse @RES if $res_reverse == 1;
+
 
 	$F{'p'} = int($F{'p'}); $F{'p'} = 1 if ($F{'p'} < 1);
 	$V{'tlog'} = $#LOG + 1; $V{'tres'} = $#RES + 1; $V{'trate'} = 0; $V{'trate'} = int(($#RES + 1) / ($#LOG + 1) * 10 ) / 10 if $#LOG + 1 != 0 ;
@@ -246,15 +297,15 @@ $soft = "IRiS nX"; $ver = "1.33 sp2";
 			elsif ($tmp == 1) { $p_next = $_[0]; last; }
 			else { $ppp = $_[0]; }
 		}
-		if ($p_prev > 0) { $V{'prev'} = $prev_link; $V{'prev'} =~ s/<-!->/irisnx.cgi?m=$F{'m'}&p=$F{'p'}&n=$p_prev/i; } else { $V{'prev'} = $no_prev; }
-		if ($p_next != 0) { $V{'next'} = $next_link; $V{'next'} =~ s/<-!->/irisnx.cgi?m=$F{'m'}&p=$F{'p'}&n=$p_next/i;} else { $V{'next'} = $no_next; }
+		if ($p_prev > 0) { $V{'prev'} = $prev_link; $V{'prev'} =~ s/<-!->/irisnx.cgi?m=$F{'m'}&p=$F{'p'}&n=$p_prev$extraline/i; } else { $V{'prev'} = $no_prev; }
+		if ($p_next != 0) { $V{'next'} = $next_link; $V{'next'} =~ s/<-!->/irisnx.cgi?m=$F{'m'}&p=$F{'p'}&n=$p_next$extraline/i;} else { $V{'next'} = $no_next; }
 	}
 	else {
 		foreach (1 .. ($F{'p'} - 1) * $page) { shift(@LOG); }; 
 		$#LOG = $page - 1 if ($#LOG >= $page); 
 		$p_prev = $F{'p'} - 1; $p_next = $F{'p'} + 1;
-		if ($p_prev > 0) { $V{'prev'} = $prev_link; $V{'prev'} =~ s/<-!->/irisnx.cgi?m=$F{'m'}&p=$p_prev/i; } else { $V{'prev'} = $no_prev; }
-		if ($p_next < $V{'totp'} + 1) { $V{'next'} = $next_link; $V{'next'} =~ s/<-!->/irisnx.cgi?m=$F{'m'}&p=$p_next/i;} else { $V{'next'} = $no_next; }
+		if ($p_prev > 0) { $V{'prev'} = $prev_link; $V{'prev'} =~ s/<-!->/irisnx.cgi?m=$F{'m'}&p=$p_prev$extraline/i; } else { $V{'prev'} = $no_prev; }
+		if ($p_next < $V{'totp'} + 1) { $V{'next'} = $next_link; $V{'next'} =~ s/<-!->/irisnx.cgi?m=$F{'m'}&p=$p_next$extraline/i;} else { $V{'next'} = $no_next; }
 		$V{'page_bar'} = &get_pagebar($V{'page'}, $V{'totp'}, $style);
 	}
 
@@ -375,6 +426,7 @@ $soft = "IRiS nX"; $ver = "1.33 sp2";
 				$temp =~ s/(NAME="p")/$1 value="$F{'p'}"/i if ($F{'m'} eq 'rfm');
 				$temp =~ s/(NAME="title")/$1 value="$E{'title'}"/ig;
 				$temp =~ s/(<\/textarea>)/$E{'comment'}$1/ig;
+				$temp =~ s/http:\/\/ivy\.pr\.co\.kr\/purity/http:\/\/nvyu\.net/ig; # ...;; -_-;;
 				print $temp;
 			}
 		}
@@ -479,6 +531,7 @@ sub cvt_data {
 	%A = &get_time($L{'time'});
 	$rtime = &get_vtime(time);
 	%C = &get_time($rtime);
+
 	$rtime=($C{'yyyy'}*97761600+$C{'mm'}*267840+$C{'dd'}*8640+$C{'ho'}*360+$C{'mi'}*6+$C{'se'})-($A{'yyyy'}*97761600+$A{'mm'}*267840+$A{'dd'}*8640+$A{'ho'}*360+$A{'mi'}*6+$A{'se'});
 	if ($rtime) {
 		if ($rtime < 360) { $clr = $gradcolor; }
@@ -746,9 +799,9 @@ sub get_pagebar {
 	$pages .= qq|<a href="irisnx.cgi?m=$F{'m'}&p=1">[1]</a>...| if ($b_p > 1 && $style == 0);
 	for ($i = $b_p; $i <= $e_p; $i++) {
 		if ($page_now == $i) { $pages .= "<b>[$i]</b>"; }
-		else { $pages .= qq|<a href="irisnx.cgi?m=$F{'m'}&p=$i">[$i]</a>|; }
+		else { $pages .= qq|<a href="irisnx.cgi?m=$F{'m'}&p=$i$extraline">[$i]</a>|; }
 	}
-	$pages .= qq|...<a href="irisnx.cgi?m=$F{'m'}&p=$page_total">[$page_total]</a>| if ($e_p < $page_total && $style == 0);
+	$pages .= qq|...<a href="irisnx.cgi?m=$F{'m'}&p=$page_total$extraline">[$page_total]</a>| if ($e_p < $page_total && $style == 0);
 	$pages;
 
 }
@@ -800,7 +853,7 @@ sub msg_error {
 	print "Content-type: text/html\nPragma: no-cache\n\n";
 	if ($flag eq '') {
 		print "<HTML><HEAD><TITLE>500 CGI internal Error</TITLE></HEAD>";
-		print qq|<table width=100% height=95%><tr><td align=center><table border=1 cellspacing=1 cellpadding=5 bgcolor="#fededd"><tr><td align=center><B>500 CGI Internal Error</b><hr><font size=2>$soft - $ver ($location)<br><b>ERROR : $message</b><br>Please contact to <a href="mailto:$email">admin</a> for report this error.<br></font></td></tr></table><font size=1><br>presented from <a href="http://nvyu.net" target="_blank">-=purity=-</a></font></td></tr></table>|;
+		print qq|<table width=100% height=95%><tr><td align=center><table border=1 cellspacing=1 cellpadding=5 bgcolor="#fededd"><tr><td align=center><B>500 CGI Internal Error</b><hr><font size=2>$soft - $ver ($location)<br><b>ERROR : $message</b><br>Please contact to <a href="mailto:$email">admin</a> for report this error.<br></font></td></tr></table><font size=1><br>presented from <a href="http://nvyu.net/" target="_blank">-=starry scape=-</a></font></td></tr></table>|;
 		&unlock;
 		exit;
 	} 
@@ -812,14 +865,15 @@ sub msg_error {
 }
 
 sub check_deny {
-	@DENY_IP = &get_file($_[0]); $match = 0; chomp(@DENY_IP);
-	foreach  (@DENY_IP) {
-		if ($_ !~ /\#/) {		
-			if ($ENV{'REMOTE_ADDR'} =~ /^$_/) { $match=1; last; }
+	if (-f $_[0]) {
+		@DENY_IP = &get_file($_[0]); $match = 0; chomp(@DENY_IP);
+		foreach  (@DENY_IP) {
+			if ($_ !~ /\#/) {		
+				if ($ENV{'REMOTE_ADDR'} =~ /^\Q$_\E/) { $match=1; last; }
+			}
 		}
+		&msg_error("blocked IP", "Access denided.<br>please contact to administrator.<br>YOUR ACCEESSED IP : $ENV{'REMOTE_ADDR'}") if ($match);
 	}
-	&msg_error("blocked IP", "Access denided.<br>please contact to administrator.<br>YOUR ACCEESSED IP : $ENV{'REMOTE_ADDR'}") if ($match);
-
 }
 
 END { 

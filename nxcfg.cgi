@@ -2,9 +2,9 @@
 #  IRiS nX configuration template
 #  ------------------------------
 #
-#  Copyright(C)2000-2001. NvyU. (20001119 release)
+#  Copyright(C)2000-2001. NvyU. (20001204 release)
 #	   E-MAIL	: nvyu@hitel.net
-#	   HOMEPAGE : http://nvyu.net
+#	   HOMEPAGE : http://nvyu.net/
 #
 #  안내 사항.
 #  - 이 스크립트는 공개로 제공됩니다. 이 스크립트를 사용할 경우에 생길 수 있는
@@ -91,7 +91,7 @@ $must{'name'} = 2;
 $must{'email'} = 0; 
 $must{'url'} = 0;
 $must{'title'} = 0;
-$must{'comment'} = 2;
+$must{'comment'} = 3;
 $must{'file'} = 0;
 # 0 - 작성하지 않아도 좋아요, 1 - 일반게시물작성시 꼭 써야 해요, 
 # 2 - 답글 작성시 꼭 써야 해요, 3 - 어쨌거나 써야 해요 - -;;
@@ -124,8 +124,13 @@ $gradcolor2 = "#555555";
 # 이미지 업로드 제한 크기 (kb 단위, 0은 제한 안함)
 $img_limit = 100;
 
-
 # 쿠키 아이디. (수정 불필요)
 $cookie_id = 'nx';
+
+#검색 제한 로그 수 (레스 포함입니다)
+$find_limit = 1000; 
+
+
+# 아랫줄 지우지 말아주세요.
 
 1;
