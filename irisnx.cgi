@@ -1,20 +1,21 @@
 #!/usr/bin/perl
 
-$soft = "IRiSnX"; $ver = "1.11";
+$soft = "IRiSnX"; $ver = "1.292";
 
 #  IRiS (resbbs) nX
 #  ----------------
-#  Copyright(C)2000. NvyU. (20001023 release)
+#  Copyright(C)2000. NvyU. (20010101 release)
 #	   E-MAIL	: nvyu@hitel.net
 #	   HOMEPAGE : http://ivy.pr.co.kr/purity/
 #
 #  안내 사항.
 #  - 이 스크립트는 공개로 제공됩니다. 이 스크립트를 사용할 경우에 생길 수 있는
 #	 손해 등에 대해서 제작자는 일체 책임을 지지 않습니다.
-#  - 설치 등과 관련된 질문은 제작자의 홈페이지로 문의하실 수 있습니다.
 #  - 원하시는 추가 기능이 있으실 경우에는 리퀘스트 해주시면 감사하겠습니다.
 #  - 저작권 정보는 수정하지 말아주세요.
 #
+#  - readme.txt 파일에 이미 기록되어 있는 사항에 대해서는
+#    답변드리지 않을 수 있습니다.
 #
 
 	require 'nxcfg.cgi';
@@ -41,17 +42,19 @@ $soft = "IRiSnX"; $ver = "1.11";
 
 	$scr = $ENV{'SCRIPT_NAME'};	$scr =~ s/(~|%7E)//g; 
 	$ref = $ENV{'HTTP_REFERER'}; $ref =~ s/(~|%7E)//g;
-	&msg_error("setting", "it's iris nX! it is not purydiary or upboard. please rename installed directory.") if ($env[$#env-1] =~ /(pury|up)/);
+	&msg_error("setting", "it's iris nX! please rename installed directory.") if ($env[$#env-1] =~ /(pury|up|asq)/i);
 	&msg_error("submit", "illegal referer") if ($F{'m'} =~ /(reg|res|ers|emt)/ && $scr ne '' && $ref !~ /$scr/);
 
 	unlink($tmpfile) if ($F{'m'} eq 'dwn' && $admin == 1);
 	&cvt_html; 
 
+
 	if ($F{'m'} eq 'reg') {	
 		if ($art_register != 1 or ($art_register == 1 && $admin == 1)) {
 			if ($F{'anum'} eq '') {
 				foreach (0 .. 5) { @TMP = split(/\|/, $_); &msg_error("submit","resubmitted?") if ($TMP[2] eq $F{'name'} && $TMP[6] eq $F{'comment'}); }
-				$filename = &sav_file if ($F{'file'} ne '');
+				if ($F{'file.name'} =~ /^(http|ftp|telnet):\/\// && (($outsidelink == 1 && $admin == 1) or $outsidelink == 2)) { $filename = $F{'file.name'}; }
+				else { $filename = &sav_file if ($F{'file'} ne ''); }
 				&lock;
 				@TOTLOG = &get_file($nx_log); $num = $TOTLOG[0] + 0; shift(@TOTLOG);
 				$num += 1;
@@ -64,10 +67,10 @@ $soft = "IRiSnX"; $ver = "1.11";
 				&put_file($nx_log, ("$num\n", @TOTLOG));
 				&unlock;
 				&put_cookie($F{'name'}, $F{'email'},$F{'url'});
-			} 
-			
+			} 			
 			else {				
 				($mnum, $snum) = split(/_/, $F{'anum'});
+				$F{'time'} = &spt_date($F{'date'}, $F{'time'}); 
 				&lock;
 				@TOTLOG = &get_file($nx_log); $num = $TOTLOG[0] + 0; shift(@TOTLOG);
 				foreach $LOG (@TOTLOG) {
@@ -89,7 +92,8 @@ $soft = "IRiSnX"; $ver = "1.11";
 	elsif ($F{'m'} eq 'res') {
 		if ($res_register != 1 or ($res_register == 1 && $admin == 1)) {
 			undef(@ADDLOG); undef(@NEWLOG); 
-			$filename = &sav_file if ($F{'file'} ne '');
+			if ($F{'file.name'} =~ /^(http|ftp|telnet):\/\// && (($outsidelink == 1 && $admin == 1) or $outsidelink == 2)) { $filename = $F{'file.name'}; }
+			else { $filename = &sav_file if ($F{'file'} ne ''); }
 			&lock;
 			@TOTLOG = &get_file($nx_log); $num = $TOTLOG[0] + 0; shift(@TOTLOG);
 			foreach (@TOTLOG) { @TMP = split(/\|/, $_); &msg_error("reply", "resubmitted?") if ($TMP[2] eq $F{'name'} && $TMP[6] eq $F{'comment'}); }
@@ -154,20 +158,6 @@ $soft = "IRiSnX"; $ver = "1.11";
 		&unlock;
 	}
 
-	if ($F{'m'} eq 'mariko') {
-		foreach $LOG (@TOTLOG) {
-			@TMP = split(/\|/, $LOG);
-			if (length $miko{"$TMP[0]_$TMP[1]"} == 13) {
-				($E{'no'}, $E{'sno'}, $cookie{'cname'}, $cookie{'cemail'}, $cookie{'curl'}, $E{'time'}, $E{'comment'}, $E{'filename'}, $E{'title'}) =  split(/\|/, $LOG);
-				$E{'comment'} =~ s/<br>|<BR>/\n/g;
-				$E{'comment'} =~ s/</&lt;/g;
-				$E{'comment'} =~ s/>/&gt;/g;
-				$edtsret = qq|<input type=hidden name="anum" value="$E{'no'}_$E{'sno'}"><input type=hidden name="filename" value="$E{'filename'}"><input type=hidden name="time" value="$E{'time'}">|;
-				$dmi = "<font size=2><b>$E{'no'}-$E{'sno'} </b>번의 게시물 편집 모드입니다.<br>파일 수정 전송은 불가능하므로 주의해주세요.</font><br>";
-			}
-		}
-	}
-
 	if ($admin == 1) {
 		$nmsg = qq|<a href="irisnx.cgi?m=dwn&p=$F{'p'}"><font color=red>경고 메시지 제거</font></a>| if (-e $tmpfile);
 		if ($F{'m'} eq 'ers') { $ment = "보기"; $cmt = ''; $eddt = "삭제"; } else { $ment = "삭제"; $cmt = 'ers'; }
@@ -179,13 +169,16 @@ $soft = "IRiSnX"; $ver = "1.11";
 
 	$dmi .= qq|</table></td></tr></table></form><p>| if ($dmi ne '');
 	$dmi .= qq|<p><font size=3>- 계정 공간이 부족합니다 - <br>관리자가 문제를 해결할 때까지 <b>게시물 투고를 자제해주시기 바랍니다.</b></font><p>| if (-e $tmpfile);
-	if ($F{'m'} ne 'rfm') { @main = &get_file($nx_main); }  
-	else { @main = &get_file($nx_resf); }
-
-	@view = &get_file($nx_view);
-	@repl = &get_file($nx_repl);
-
-
+	if ($F{'m'} ne 'rfm') { 
+		@main = &get_file($nx_main); 
+		@view = &get_file($nx_view);
+		@repl = &get_file($nx_repl);
+	}  
+	else { 
+		@main = &get_file($nx_resf);
+		if (-f $nx_rview) { @view = &get_file($nx_rview); } else { @view = &get_file($nx_view); }
+		if (-f $nx_rrply) { @repl = &get_file($nx_rrply); } else { @repl = &get_file($nx_repl); }
+	}
 
 	undef($repl); foreach $_ (@repl) { $repl .= $_; }
 
@@ -208,6 +201,34 @@ $soft = "IRiSnX"; $ver = "1.11";
 	$V{'page_bar'} = &get_pagebar($V{'page'}, $V{'totp'}, $style);
 
 	&header;
+
+	if ($F{'m'} eq 'mariko' && $admin == 1) {
+		foreach $LOG (@TOTLOG) {
+			@TMP = split(/\|/, $LOG);
+			if (length $miko{"$TMP[0]_$TMP[1]"} == 13) {
+				($E{'no'}, $E{'sno'}, $E{'name'}, $E{'email'}, $E{'url'}, $E{'time'}, $E{'comment'}, $E{'filename'}, $E{'title'}) =  split(/\|/, $LOG);
+				$E{'comment'} =~ s/<br>|<BR>/\n/g;
+				$E{'comment'} =~ s/</&lt;/g;
+				$E{'comment'} =~ s/>/&gt;/g;
+				%A = &get_time($E{'time'});
+				$NN = $E{'no'}; $NN .= qq| - $E{'sno'}| if ($E{'sno'} ne '');
+				$VD = qq|$A{'yyyy'}/$A{'mm'}/$A{'dd'}/$A{'week_p'}|; $VT = qq|$A{'ho'}:$A{'mi'}:$A{'se'}|;
+				$NF = 'No attached' if (($NF = $E{'filename'}) eq ''); 
+				$dmi .= qq|<font size=2>게시물 편집 모드입니다.<br>파일 수정 전송은 불가능하므로 주의해주세요.<br>|;
+				print qq|<html><head></head><body><div align=center>$dmi|;
+				print qq|<form method=post action="irisnx.cgi"><input type=hidden name="m" value="reg"><table border=1 cellspacing=0 cellpadding=1>|;
+				print qq|<input type=hidden name="anum" value="$E{'no'}_$E{'sno'}"><input type=hidden name="filename" value="$E{'filename'}">|;
+				print qq|<tr><td rowspan=3 align=center><b>$NN</b></td><td><font size=2>NAME</font></td><td><input type=text name="name" value="$E{'name'}" size=12><td><font size=2>EMAIL</font></td><td><input type=text name="email" value="$E{'email'}" size=12></td><td><font size=2>URL</font></td><td><input type=text name="url" value="$E{'url'}" size=12></td></tr>|;
+				print qq|<tr><td><font size=2>DATE</font></td><td><input type=text name="date" value="$VD" size=12></td><td><font size=2>TIME</font></td><td><input type=text name="time" value="$VT" size=12></td><td><font size=2>ATTACH</font></td><td align=center><font size=2><b>$NF</b></font></td></tr>|;
+				print qq|<tr><td><font size=2>TITLE</font></td><td colspan=5><input type=text name="title" value="$E{'title'}" size=55></td></tr>|;
+				print qq|<tr><td align=center colspan=7><textarea name="comment" rows=5 cols=55>$E{'comment'}</textarea></td></tr>|;
+				print qq|<tr><td align=center colspan=7><input type=submit value=" carrot "> <input type=reset value="reset"></td></tr></table><p><a href="history.back();">[back]</a></font>|;
+				print qq|</form></div></body></html>|;
+			}		
+		}
+		exit;
+	}
+
 
 	foreach $temp (@main) {
 		$adm = not $adm if ($temp =~ /<!--admin_only-->/ && $admin == 0);
@@ -290,6 +311,18 @@ $soft = "IRiSnX"; $ver = "1.11";
 
 exit;
 
+sub spt_date {
+	my($DATE, $TIME) = @_; my(%C);
+	($C{'yyyy'}, $C{'mm'}, $C{'dd'}, $wp) = split(/\//,$DATE);
+	($C{'ho'}, $C{'mi'}, $C{'se'}) = split(/:/,$TIME);
+	$wp = substr($wp, 0, 1);
+	foreach (keys %C) {
+		if ($_ eq 'yyyy') { $C{$_} = "0$C{$_}" while (length $C{$_} < 4); }
+		else { $C{$_} = "0$C{$_}" while (length $C{$_} < 2); } 
+	}
+	"$C{'yyyy'}$C{'mm'}$C{'dd'}$C{'ho'}$C{'mi'}$C{'se'}$wp";
+}
+
 sub rmv_list {
 	my($mest, %A) = @_;
 	my($color); my($ldt); my($flag);
@@ -307,12 +340,12 @@ sub cvt_data {
 	($L{'num'}, $L{'sn'}, $L{'name'}, $L{'email'}, $L{'url'}, $L{'time'}, $L{'comment'}, $L{'filename'}, $L{'title'}) = split(/\|/, $LOG);
 	$L{'name'} = qq|<a href="mailto:$L{'email'}">$L{'name'}</a>| if ($L{'email'} ne '');
 	$tmp = $L{'url'}; $L{'url'} = $url; $L{'url'} =~ s/<-!->/$tmp/g;
-	$L{'reply'} = $reply_link; $L{'reply'} =~ s/<-!->/irisnx.cgi?m=rfm&n=$L{'num'}"/g;
+	$L{'reply'} = $reply_link; $L{'reply'} =~ s/<-!->/irisnx.cgi?m=rfm&p=$F{'p'}&n=$L{'num'}"/g;
 	$L{'reply'} = '' if ($F{'m'} eq 'rfm');
 	%A = &get_time($L{'time'});
 	$rtime = &get_vtime(time);
 	%C = &get_time($rtime);
-	$rtime=($C{'yyyy'}*97761600+$C{'mm'}*267840+$C{'dd'}*8640+$C{'ho'}*360+$C{'mi'}*6)-($A{'yyyy'}*97761600+$A{'mm'}*267840+$A{'dd'}*8640+$A{'ho'}*360+$A{'mi'}*6);
+	$rtime=($C{'yyyy'}*97761600+$C{'mm'}*267840+$C{'dd'}*8640+$C{'ho'}*360+$C{'mi'}*6+$C{'se'})-($A{'yyyy'}*97761600+$A{'mm'}*267840+$A{'dd'}*8640+$A{'ho'}*360+$A{'mi'}*6+$A{'se'});
 	if ($rtime) {
 		if ($rtime < 360) { $clr = $gradcolor; }
 		elsif ($rtime > 360 * 24 * 7) { $clr = $gradcolor2; }
@@ -329,10 +362,11 @@ sub cvt_data {
 	else { $clr = $gradcolor2; }
 	$L{'gradcolor'} = "\#$clr";
 	if ($L{'filename'} ne '') {
-		my($name, $ext) = split(/\./, $L{'filename'});
-		$ext = lc($ext);
+		my(@mnext) = split(/\./, $L{'filename'});
+		$ext = lc($mnext[$#mnext]);
 		foreach $_ (@img_list) { $img_method = 1 if ($_ eq $ext); }
 		$tmp = $L{'filename'}; $amp = qq|$data_url$L{'filename'}|; 
+		if ($L{'filename'} =~ /^(http|ftp|telnet):\/\//) { $amp = $tmp; } else { qq|$data_url$L{'filename'}|; }
 		if ($img_method == 1) { $L{'data'} = $img_link; }
 		else { $L{'data'} = $etc_link; }
 		$L{'data'} =~ s/<-!->/$amp/g;
@@ -441,12 +475,13 @@ sub get_vtime {
 	if (length $_[0] != 15) {	
 		@tmp = localtime($_[0]);
 		foreach (0 .. 5) { 
-			$tmp[$_] = "0$tmp[$_]" if ($tmp[$_] < 10);
 			if ($_ == 4) { $tmp[4] += 1; }
 			elsif ($_ == 5) {
 				$tmp[5] += 1900 if (length $tmp[5] < 4);
 				$tmp[5] += 100 if ($tmp[5] <= 1970);
 			}
+			$tmp[$_] = "0$tmp[$_]" if ($tmp[$_] < 10);
+
 			$vt = $tmp[$_]. $vt; 
 		}
 		$vt .= $tmp[6];
@@ -457,12 +492,12 @@ sub get_vtime {
 
 sub get_time {
 
-	my(%L); my($vt);
-	if (length $_[0] != 15) {	
-		($L{'se'}, $L{'mi'}, $L{'ho'}, $L{'dd'}, $L{'mm'}, $L{'yyyy'}, $wday, $dummy, $dummy) = localtime($_[0]);
+	my(%L); my($vt); my($pt);
+	if ($_[0] =~ /^(8|9)/) {
+		($L{'se'}, $L{'mi'}, $L{'ho'}, $L{'dd'}, $L{'mm'}, $L{'yyyy'}, $L{'week_p'}, $dummy, $dummy) = localtime($_[0]);
 		$L{'yyyy'} += 1900 if length $L{'yyyy'} < 4;
 		$L{'yyyy'} += 100 if $L{'yyyy'} <= 1970;
-		$L{'mm'} += 1; $L{'week'} = (Sun,Mon,Tue,Wed,Thu,Fri,Sat) [$wday];
+		$L{'mm'} += 1; $L{'week'} = (Sun,Mon,Tue,Wed,Thu,Fri,Sat) [$L{'week_p'}];
 		$L{'se'} = "0$L{'se'}"  if $L{'se'} < 10;
 		$L{'mi'} = "0$L{'mi'}"  if $L{'mi'} < 10;
 		$L{'ho'} = "0$L{'ho'}" if $L{'ho'} < 10;
@@ -472,12 +507,13 @@ sub get_time {
 	}
 	else {
 		$L{'yyyy'} = substr($_[0], 0, 4);
-		$L{'mm'} = substr($_[0], 4, 2);
+		$L{'mm'} = substr($_[0], 4, 2);	
 		$L{'dd'} = substr($_[0], 6, 2);
 		$L{'ho'} = substr($_[0], 8, 2);
 		$L{'mi'} = substr($_[0], 10, 2);
 		$L{'se'} = substr($_[0], 12, 2);
-		$L{'week'} = (Sun,Mon,Tue,Wed,Thu,Fri,Sat) [substr($_[0], 14,1)];
+		$L{'week_p'} = substr($_[0], 14, 1);
+		$L{'week'} = (Sun,Mon,Tue,Wed,Thu,Fri,Sat) [substr($_[0], 14, 1)];
 	}
 	return %L;
 
@@ -599,7 +635,7 @@ sub log_limit {
 		if ($TMP[0] != $prt) { $count += 1; $prt = $TMP[0]; }
 		if ($count > $max || ($giveit != 0 && $TMP[0] == $giveit)) {
 			$giveit = $TMP[0];
-			if ($TMP[7] ne '') {
+			if ($TMP[7] ne '' && $TMP[7] !~ /^(http|ftp|telnet):\/\//) {
 				$filename = &get_filename($backup_dir, $TMP[7]);
 				rename("$data_dir$TMP[7]", "$backup_dir$filename");
 			}

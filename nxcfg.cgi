@@ -2,7 +2,7 @@
 #  IRiS (resbbs) nX configuration template
 #  ---------------------------------------
 #
-#  Copyright(C)1999-2000. NvyU. (20000726 release)
+#  Copyright(C)1999-2000. NvyU. (20001119 release)
 #	   E-MAIL	: nvyu@hitel.net
 #	   HOMEPAGE : http://ivy.pr.co.kr/purity/
 #
@@ -22,9 +22,12 @@ $password = "1234";                   # 패스워드
 
 
 $nx_main = "nx_main.htm";  # 메인 HTML
-$nx_resf = "nx_resf.htm";  # 레스 폼 페이지
 $nx_view = "nx_view.htm";  # 보기 템플릿
 $nx_repl = "nx_reply.htm"; # 레스 템플릿
+
+$nx_resf = "nx_resf.htm";  # 레스 폼 페이지
+$nx_rview = "nx_viewr.htm";
+$nx_rrply = "nx_resr.htm";
 
 $data_url = "data/";                    # 데이터 URL
 $data_dir = "./data/";                  # 데이터 디렉토리
@@ -39,7 +42,7 @@ $backup_log = "backup.log"; # 백업 로그명
 $url = qq|<a href="<-!->" target="_blank"><-!-></a>|; 
                                         # url 표시 방법 : <-!->는 URL 주소를 반환합니다.
 
-$img_link = qq|<img src="<-!->" align=right border=1 vspace=3>|;
+$img_link = qq|<img src="<-!->" align=right border=0 vspace=3>|;
 										# 데이터 파일로 이미지가 올라왔을 때 표시 방법
 
 $etc_link = qq|<a href="<-!->"><-o-></a>|;
@@ -64,12 +67,11 @@ $no_next = qq|[LAST]|;
 
 ###############################################################################
 
-$res_move_top = 0;                      # 레스달린 글을 가장 위로 올릴까요?
+$res_move_top = 1;                      # 레스달린 글을 가장 위로 올릴까요?
 										# 0 - 올리지 않는다.
 										# 1 - 올린다
-                                      
 
-$page = 3;                           # 한 페이지당 표시될 게시물 수                              
+$page = 15;                           # 한 페이지당 표시될 게시물 수                              
 $style = 0;          # 페이지바 표시 방법 0 - [1]...[48][49][50][51][52]...[99]
                      #                    1 - [48][49][50][51][52]
 
@@ -77,7 +79,7 @@ $style = 0;          # 페이지바 표시 방법 0 - [1]...[48][49][50][51][52]...[99]
 $max = 500;                             # 한 로그당 최대 게시물 수 (메인 아티클 기준)
 
 $lockfile = "$data_dir/irisnx.lock";      # LOCK 파일 경로
-$lock = 1;		                        # 0 - no use, 1 = symlink, 2 = open
+$lock = 1;                                # 0 - no use, 1 = symlink, 2 = open
 
 
 ###########################################
@@ -86,8 +88,8 @@ $lock = 1;		                        # 0 - no use, 1 = symlink, 2 = open
 $must{'name'} = 2; 
 $must{'email'} = 0; 
 $must{'url'} = 0;
-$must{'title'} = 1;
-$must{'comment'} = 2;
+$must{'title'} = 0;
+$must{'comment'} = 3;
 $must{'file'} = 0;
 # 0 - 작성하지 않아도 좋아요, 1 - 일반게시물작성시 꼭 써야 해요, 
 # 2 - 답글 작성시 꼭 써야 해요, 3 - 어쨌거나 써야 해요 - -;;
@@ -96,7 +98,7 @@ $must{'file'} = 0;
 @img_list = ( 'gif', 'jpg', 'jpeg', 'png', ); # 이미지 파일로 정의될 확장자 명. 대소문자 구별 안합니다.
 
 # 0 - 아무 파일이나 가능해요, 1 - 이미지 파일만 가능해요 (위의 확장자명에 따라 구분합니다)
-$must_img = 1; 
+$must_img = 0; 
 
 
 $art_register = 1;       # 메인 아티클 작성 허용 여부
@@ -108,11 +110,13 @@ $res_register = 0;       # 레스 작성 허용 여부
 $html_use = 1;
 $autolink = 1;    # URL 자동 링크 허용 여부
 
+$outsidelink = 1; # FILE 필드에 URL 입력으로 불러오기 허용 여부 0 - 불능, 1 - 관리자만 가능, 2 - 누구나 가능
+
 # 제목이 없을 때의 기본 제목
 $default_title = "";
 
 $gradcolor  = "#000000";
-$gradcolor2 = "#0044ff";
+$gradcolor2 = "#dddddd";
 
 
 # 이미지 업로드 제한 크기 (kb 단위, 0은 제한 안함)
