@@ -1,8 +1,81 @@
-  IRiS nX 1.4 upgrade info
-  ------------------------
-  Copyright(C)2000-2001. NvyU. (20011204 released)
-     EMAIL : nvyu@hitel.net
+  IRiS nX 1.51 upgrade info
+  -------------------------
+  Copyright(C)2000-2004. NvyU. (20040511 released)
   HOMEPAGE : http://nvyu.net/
+
+> 1.5에서 1.51로의 업그레이드
+
+] 버전 업 하실 파일들
+
+  irisnx.cgi / 그대로 업로드합니다.
+  nxcfg.cgi / 다음과 같은 항목을 삽입합니다.
+
+$delete_link = qq|<a href="<-!->">[DELETE]</A>|;
+                                        # delete 링크 태그.
+
+# RSS setting
+
+$title  = " nXtination "; 
+        # 홈페이지 명을 기입합니다. 따옴표는 사용하지 말아주세요.
+$homepage = "http://어딘지모름/";
+		# 홈페이지 주소를 입력합니다.
+
+$descript = "즐거운 이야기들";
+		# 홈페이지 소개를 적습니다.
+
+$encode = "euc-kr";
+        # nX 페이지의 인코딩 방식(euc-kr, utf-8)등을 기입합니다.
+
+$language = "kr";
+		# 페이지의 언어. 
+
+$link	= "http://.../nxInstalled/";
+		# nX가 설치되어 있는 URL을 기입합니다. 
+		# ( http://nvyu.net/nx/irisnx.cgi 인 경우 -> http://nvyu.net/nx/ )
+
+$rss_limit = 0;
+		# XML을 생성할 게시물 갯수를 설정합니다.
+		# $limit = 10; <- 열개
+		# $limit = 0; <- nX의 설정에 따릅니다.
+
+  nx_view.htm 또는 nx_reply.htm 등에 다음 템플릿 태그를 추가합니다.
+  del<!--d--> / 게시물 삭제 링크
+  * 게시물 삭제는, 작성자의 IP 및 쿠키 정보를 체크해서 등록한 게시물 이후로
+    레스가 달리지 않은 경우에만 동작하도록 되어 있습니다.
+
+] irisnx.cgi?xml = xml RSS를 출력해줍니다.
+
+
+
+> 1.4x에서 1.5로의 업그레이드
+
+  1.5 버전은 1.4에 백업 로그의 열람 기능이 추가로 포함된 것입니다.
+
+] 버전 업 하실 파일들
+
+  irisnx.cgi / 그대로 업로드합니다.
+  nxcfg.cgi / 다음과 같은 항목을 삽입합니다.
+
+$backup_url = "backup/";               # 백업 URL (추가됨)
+$log_notice = qq|<font size=2>옛글보기 모드입니다.<br>옛 글에는 답글을 달 수 없어요!</font> |;
+
+$log_prev_link = qq|<a href="<-!->">[MORE NEW]</a>|;
+$log_next_link = qq|<a href="<-!->">[MORE PAST]</a>|;
+$log_no_prev = qq|<a href="<-!->">[NOW]</a>|;
+$log_no_next = qq| |;
+
+  nx_main.htm 에 다음의 템플릿 코드를 삽입합니다.
+
+  log_new<!--d--> / 최근 로그 보기
+  log_old<!--d--> / 옛 로그 보기
+
+
+] 추가된 파라메터
+
+  다른 곳에서 특정 게시물에 링크해놓고 싶은데 페이지는 밀려나니 방법이 없어요!
+  ...이신 분은 다음과 같이 링크 해주세요.
+  http://URL/irisnx.cgi?a=[게시물번호]
+
 
 
 > 1.3x에서 1.4로의 업그레이드
@@ -38,7 +111,7 @@
 
   다음은 검색 폼 예제입니다.
 
-  <FORM METHOD="get" action="irisnx.cgi"><INPUT TYPE="hidden" NAME="m" VALUE="find">
+  <FORM METHOD="post" action="irisnx.cgi"><INPUT TYPE="hidden" NAME="m" VALUE="find">
     <TABLE CELLSPACING="2" CELLPADDING="2" BORDER="1">
       <TR>
         <TD colspan=2>
