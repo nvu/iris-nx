@@ -1,0 +1,55 @@
+<!doctype html public "-//w3c//dtd html 3.2 final//en">
+<html><head><title>IRiS nX Board</title>
+<meta http-equiv="Content-Type" content="text/html; charset=euc-kr">
+</head>
+<body bgcolor="#99aaee" text="#333333" link="#ff0000" vlink="#ff0000" alink="#ff0000">
+<center>
+  <table border=0 width="100%">
+    <tr>
+	  <td align=left valign=top><font color="#000000" face="Arial"><b><i>IRiS nX BOARD</b></i></font></td>
+	  <td align=right valign=top><font size=1><b>tlog<!--d--></b>/<b>tres<!--d--></b> 
+	  (<b>1</b>:<b>trate<!--d--></b>)</font> 
+	  <a href="irisnx.cgi?m=elf">[admin]</a></td>
+	</tr>
+  </table>
+  <hr size=1>
+  <br>
+
+<!--admin_only-->
+<!---- admin_only  로 막아둔 부분은 관리자 모드일 때만 나타납니다. 한 라인에만 적어주세요------>
+
+  <form method=post action="./irisnx.cgi" enctype="multipart/form-data">
+    <input type=hidden name="m" value="reg">
+	<table border=0 cellspacing=0 cellpadding=0 width=425>
+	  <tr>
+	    <td align=right><font size=2><b>title</b></font></td>
+		<td colspan=2><input type=text name="title" size="79"></td>
+	  </tr><tr>
+	    <td align=right><font size=2><b>message</b></font></td>
+		<td colspan=2><textarea name="comment" COLS=78 ROWS=14 wrap=soft></textarea></td>
+	  </tr><tr>
+	    <td align=right><font size=2><b>attach</b></td>
+		<td><input type=file name="file" size="24"></td>
+		<td align=right><input type=submit value="PRESENT"></td>
+	  </tr>
+	</table>
+  </form>
+
+<!--admin_only-->
+
+
+<!--data_include-->
+
+<p>
+
+<font size=2>
+prev<!--d--> page_bar<!--d--> next<!--d--><p>
+</font>
+<p>
+<hr size=1 width=100>
+<font size=2 face="Arial" style="font-size:12px;">
+<b>IRiS nX</b> ... copyright &copy; 2000. NvyU (<a href="http://ivy.pr.co.kr/purity/" target="_blank">-=purity=-</a>)</font>
+<hr size=1 width=100>
+</center>
+</body>
+</html>
