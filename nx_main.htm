@@ -4,15 +4,15 @@
 </head>
 <body bgcolor="#ffffff" text="#333333" link="#ff0000" vlink="#ff0000" alink="#ff0000">
 <center>
-  <table border=0 width="100%">
+
+  <table width=600 cellspacing=0 cellpadding=0 border=0>
     <tr>
-	  <td align=left valign=top><font color="#000000" face="Arial"><b><i>IRiS nX BOARD</b></i></font></td>
-	  <td align=right valign=top><font size=1><b>tlog<!--d--></b>/<b>tres<!--d--></b> 
-	  (<b>1</b>:<b>trate<!--d--></b>)</font> 
-	  <a href="irisnx.cgi?m=elf">[admin]</a></td>
+	  <td align=left valign=bottom><font color="#000000" face="Arial"><b>IRiS nX</b><br>
+	  <font size=1><b>tlog<!--d--> ARTICLES / tres<!--d--> REPLIES [1:trate<!--d-->]</font></td>
+	  <td align=right valign=bottom><font size=1>=<a href="irisnx.cgi?m=elf">ADMIN</a>=</font></td>
 	</tr>
+	<tr><td colspan=2><hr size=1></td></tr>
   </table>
-  <hr size=1>
   <br>
 
 <!--admin_only-->
@@ -22,16 +22,22 @@
     <input type=hidden name="m" value="reg">
 	<table border=0 cellspacing=0 cellpadding=0 width=425>
 	  <tr>
-	    <td align=right><font size=2><b>title</b></font></td>
-		<td colspan=2><input type=text name="title" size="79"></td>
+	    <td align=right><font size=2><b>subject</b></font></td>
+		<td colspan=3><input type=text name="title" size="69"></td>
+	  </tr><tr>
+	    <td align=right><font size=2><b>sub title</b></font></td>
+		<td colspan=3><input type=text name="name" size="69"></td>
 	  </tr><tr>
 	    <td align=right><font size=2><b>message</b></font></td>
-		<td colspan=2><textarea name="comment" COLS=78 ROWS=14 wrap=soft></textarea></td>
+		<td colspan=3><textarea name="comment" COLS=68 ROWS=14 wrap=soft></textarea></td>
 	  </tr><tr>
-	    <td align=right><font size=2><b>attach</b></td>
+	    <td align=right><font size=2><b>attach</b></font></td>
 		<td><input type=file name="file" size="24"></td>
-		<td align=right><input type=submit value="PRESENT"></td>
-	  </tr>
+		<td align=right nowrap><font size=2><b>attach style</b></font></td>
+		<td align=right><SELECT NAME="style">style_list<!--d--></SELECT></td>
+	   </tr><tr>
+	     <td colspan=4 align=right><input type=submit value="PRESENT"></td>
+	   </tr>
 	</table>
   </form>
 
@@ -46,8 +52,13 @@
 prev<!--d--> page_bar<!--d--> next<!--d--><p>
 </font>
 <p>
-<font size=2 face="Arial" style="font-size:12px;">
-<b>IRiS nX</b> ... copyright &copy; 2000-2001. NvyU (<a href="http://ivy.pr.co.kr/purity/" target="_blank">purity</a>)</font>
+
+  <table width=600 cellspacing=0 cellpadding=0 border=0>
+	<tr><td><hr size=1></td></tr>
+    <tr>
+	  <td align=right><font size=1>IRiS nX by NvyU =<a href="http://nvyu.net" target="_blank">starry scape</a>=</font></td>
+	</tr>
+  </table>
 </center>
 </body>
 </html>

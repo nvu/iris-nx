@@ -1,10 +1,10 @@
 #
-#  IRiS (resbbs) nX configuration template
-#  ---------------------------------------
+#  IRiS nX configuration template
+#  ------------------------------
 #
-#  Copyright(C)1999-2000. NvyU. (20001119 release)
+#  Copyright(C)2000-2001. NvyU. (20001119 release)
 #	   E-MAIL	: nvyu@hitel.net
-#	   HOMEPAGE : http://ivy.pr.co.kr/purity/
+#	   HOMEPAGE : http://nvyu.net
 #
 #  안내 사항.
 #  - 이 스크립트는 공개로 제공됩니다. 이 스크립트를 사용할 경우에 생길 수 있는
@@ -29,11 +29,13 @@ $nx_resf = "nx_resf.htm";  # 레스 폼 페이지
 $nx_rview = "nx_viewr.htm";
 $nx_rrply = "nx_resr.htm";
 
+$nx_desc = "nx_desc.cgi";
+
 $data_url = "data/";                    # 데이터 URL
-$data_dir = "./data/";                  # 데이터 디렉토리
+$data_dir = "data/";                  # 데이터 디렉토리
 $nx_log = "irisnx.log";       # 로그 파일
 
-$backup_dir = "./backup";               # 백업 디렉토리
+$backup_dir = "backup/";               # 백업 디렉토리
 $backup_log = "backup.log"; # 백업 로그명
 
 
@@ -67,7 +69,7 @@ $no_next = qq|[LAST]|;
 
 ###############################################################################
 
-$res_move_top = 1;                      # 레스달린 글을 가장 위로 올릴까요?
+$res_move_top = 0;                      # 레스달린 글을 가장 위로 올릴까요?
 										# 0 - 올리지 않는다.
 										# 1 - 올린다
 
@@ -79,7 +81,7 @@ $style = 0;          # 페이지바 표시 방법 0 - [1]...[48][49][50][51][52]...[99]
 $max = 500;                             # 한 로그당 최대 게시물 수 (메인 아티클 기준)
 
 $lockfile = "$data_dir/irisnx.lock";      # LOCK 파일 경로
-$lock = 1;                                # 0 - no use, 1 = symlink, 2 = open
+$lock = 2;                                # 0 - no use, 1 = symlink, 2 = open
 
 
 ###########################################
@@ -89,17 +91,17 @@ $must{'name'} = 2;
 $must{'email'} = 0; 
 $must{'url'} = 0;
 $must{'title'} = 0;
-$must{'comment'} = 3;
+$must{'comment'} = 2;
 $must{'file'} = 0;
 # 0 - 작성하지 않아도 좋아요, 1 - 일반게시물작성시 꼭 써야 해요, 
 # 2 - 답글 작성시 꼭 써야 해요, 3 - 어쨌거나 써야 해요 - -;;
 
 
-@img_list = ( 'gif', 'jpg', 'jpeg', 'png', ); # 이미지 파일로 정의될 확장자 명. 대소문자 구별 안합니다.
+# 0 - 아무 파일이나 가능해요, 1 - 등록된 파일만 가능해요.
+$must_allowed = 0; 
 
-# 0 - 아무 파일이나 가능해요, 1 - 이미지 파일만 가능해요 (위의 확장자명에 따라 구분합니다)
-$must_img = 0; 
-
+$art_reverse = 0; # 메인 아티클 반전처리.
+$res_reverse = 0;
 
 $art_register = 1;       # 메인 아티클 작성 허용 여부
 $res_register = 0;       # 레스 작성 허용 여부
@@ -116,15 +118,14 @@ $outsidelink = 1; # FILE 필드에 URL 입력으로 불러오기 허용 여부 0 - 불능, 1 - 관
 $default_title = "";
 
 $gradcolor  = "#000000";
-$gradcolor2 = "#dddddd";
+$gradcolor2 = "#555555";
 
 
 # 이미지 업로드 제한 크기 (kb 단위, 0은 제한 안함)
-$img_limit = 0;
+$img_limit = 100;
 
 
 # 쿠키 아이디. (수정 불필요)
-$cookie_id = 'nx';                      
-
+$cookie_id = 'nx';
 
 1;
