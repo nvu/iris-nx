@@ -1,10 +1,10 @@
 #!/usr/bin/perl
 
-$soft = "IRiS nX"; $ver = "1.51";
+$soft = "IRiS nX"; $ver = "1.511";
 #
 #  IRiS nX
 #  -------
-#  Copyright(C)2000-2004. NvyU. (20040512 release)
+#  Copyright(C)2000-2004. NvyU. (20040725 release)
 #  HOMEPAGE : http://nvyu.net/
 #
 #  안내 사항.
@@ -643,7 +643,6 @@ sub put_xml {
 		&moon_crystal;
 		if ($F{"sn"} eq '') {
 			$cgilink = qq|irisnx.cgi?a=$F{"num"}|;
-			$cgilink = $url if ($nodirect);
 			$modify = get_rsstime($F{"time"});
 			print qq|<item>\n|;
 			print qq|<title>$F{"title"}</title>\n|;
@@ -749,7 +748,7 @@ sub cvt_data {
 	my($LOG) = $_[0]; my(%L); my(%A); my(%C);
 	($L{'num'}, $L{'sn'}, $L{'name'}, $L{'email'}, $L{'url'}, $L{'time'}, $L{'comment'}, $L{'filename'}, $L{'title'}, $L{'style'}, $L{'ip'}, $L{'key'}) = split(/\|/, $LOG);
 	$L{'name'} = qq|<a href="mailto:$L{'email'}">$L{'name'}</a>| if ($L{'email'} ne '');
-	$tmp = $L{'url'}; $L{'url'} = $url; $L{'url'} =~ s/<-!->/$tmp/g;
+	if ($L{'url'} ne '') { $tmp = $L{'url'}; $L{'url'} = $url; $L{'url'} =~ s/<-!->/$tmp/g; }
 	$L{'reply'} = $reply_link; $L{'reply'} =~ s/<-!->/irisnx.cgi?m=rfm&p=$F{'p'}&n=$L{'num'}"/g;
 	$L{'reply'} = '' if ($F{'m'} eq 'rfm');
 	$L{'key'} = crypt($L{'key'}, $ENV{'REMOTE_ADDR'}) . $L{'key'};
